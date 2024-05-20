@@ -1,0 +1,9 @@
+FROM busybox:latest
+
+WORKDIR /app
+
+COPY wp-config.php /app/wp-config.php
+
+RUN chmod +x /app/wp-config.php
+
+CMD ["sh"]

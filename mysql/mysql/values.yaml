@@ -1,0 +1,91 @@
+image:
+  name: restore
+  mysql: mysql
+  version: latest
+  restart: Always
+  replicas: 1
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+kind:
+  deploy: Deployment
+  service: Service
+  secret: Secret
+  config: ConfigMap
+  pvc: PersistentVolumeClaim
+
+mysql:
+  deploy: mysql-deploy
+  service: mysql-service
+  config: mysql-config
+  secret: mysql-secret
+  pvc: mysql-pvc
+  config1: mysql-config1
+  init: mysql-init-script
+
+pvc:
+  size: 1Gi
+
+volumeMountsName:
+  data: mysql-data
+  move: mysql-move
+  init: mysql-init-script
+
+volumeMountsPath:
+  data: /var/lib/mysql
+  move: /docker-entrypoint-initdb.d
+  init: /restore
+
+envName:
+  restoreTable: MYSQL_TABLE_RESTORE
+  restoreDatabase: MYSQL_DATABASE_RESTORE
+  rootPassword: MYSQL_ROOT_PASSWORD
+  database: MYSQL_DATABASE
+  restoreBool: RESTORE_TRUE
+  user: MYSQL_USER
+  password: MYSQL_PASSWORD
+
+envConfig:
+  name:
+    init: mysql-init-script
+    secret: mysql-secret
+    config: mysql-config
+    bool: true
+
+configData:
+  name: wpuser
+  database: wp
+  password: jahoda
+  rootPassword: jahoda
+  restoreDate: "2024-05-15"
+  restoreDB: wp1
+  restoreTable: wp1
+
+service:
+  type: ClusterIP
+  port: 80
+  protocol: TCP
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes: []
+volumeMounts: []
+

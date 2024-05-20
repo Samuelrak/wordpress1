@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-wordpress
+  namespace: word
+spec:
+  schedule: "46 11 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup-container
+            image: alpine:latest
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                mkdir -p /backup
+                tar -czf /backup/wordpress_backup_$(date +"%Y-%m-%d").tar.gz -C /var/www/html/ .
+                alias set minio http://minio-service:9000 "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY"
+                cp /backup/wordpress_backup_$(date +"%Y-%m-%d").tar.gz minio/backup/wordpress_backup_$(date +"%Y-%m-%d").tar.gz
+            env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+            volumeMounts:
+            - name: wordpress-persistent-storage
+              mountPath: /var/www/html
+            - name: backup-volume
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: wordpress-persistent-storage
+            persistentVolumeClaim:
+              claimName: wordpress-pvc
+          - name: backup-volume
+            emptyDir: {}
+          dnsPolicy: ClusterFirst
+          schedulerName: default-scheduler

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+  name: word-ingress
+  namespace: word
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: word.fo
+    http:
+      paths:
+      - backend:
+          service:
+            name: word-service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix

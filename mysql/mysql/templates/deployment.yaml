@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: {{ .Values.kind.deploy }}
+metadata:
+  name: {{ .Values.mysql.deploy }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.image.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.mysql.deploy }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mysql.deploy }}
+    spec:
+      initContainers:
+      - name: {{ .Values.image.name }}
+        image: {{ .Values.image.mysql }}:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            if [ "$RESTORE_TRUE" = "true" ]; then
+                if [ "$MYSQL_DATABASE_RESTORE" = "wp1" ]; then
+                    echo "db is restoring..."
+                    cp /restore/init.sql /docker-entrypoint-initdb.d
+                    #rm /restore/init.sql && /docker-entrypoint-initdb.d
+                    #mysql -u root -p'$MYSQL_ROOT_PASSWORD' < /docker-entrypoint-initdb.d/init.sql
+                    restore_status=$?
+                    echo $?
+                    echo "restore completed"
+                else
+                    echo "skipping restore"
+                fi
+            else
+                echo "restore"
+            fi
+        volumeMounts:
+        - name: {{ .Values.volumeMountsName.data }}
+          mountPath: {{ .Values.volumeMountsPath.data }}
+        - name: {{ .Values.volumeMountsName.move }}
+          mountPath: {{ .Values.volumeMountsPath.move }}
+        - name: {{ .Values.volumeMountsName.init }}
+          mountPath: {{ .Values.volumeMountsPath.init }}
+        env:
+        - name: {{ .Values.envName.restoreTable }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.envConfig.name.init }}
+              key: {{ .Values.envName.restoreTable }}
+        - name: {{ .Values.envName.restoreDatabase }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.envConfig.name.init }}
+              key: {{ .Values.envName.restoreDatabase }}
+        - name: {{ .Values.envName.rootPassword }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.envConfig.name.secret }}
+              key: {{ .Values.envName.rootPassword }}
+        - name: {{ .Values.envName.database }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.envConfig.name.config }}
+              key: {{ .Values.envName.database }}
+        - name: {{ .Values.envName.restoreBool }}
+          value: "{{ .Values.envConfig.bool }}"
+      containers:
+      - name: {{ .Values.image.mysql }}
+        image: {{ .Values.image.mysql }}
+        env:
+        - name: {{ .Values.envName.user }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.envConfig.name.config }}
+              key: {{ .Values.envName.user }}
+        - name: {{ .Values.envName.password }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.envConfig.name.config }}
+              key: {{ .Values.envName.password }}
+        - name: {{ .Values.envName.database }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.envConfig.name.config }}
+              key: {{ .Values.envName.database }}
+        - name: {{ .Values.envName.rootPassword }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.envConfig.name.secret }}
+              key: {{ .Values.envName.rootPassword }}
+        volumeMounts:
+        - name: {{ .Values.volumeMountsName.data }}
+          mountPath: {{ .Values.volumeMountsPath.data }}
+        - name: {{ .Values.volumeMountsName.move }}
+          mountPath: {{ .Values.volumeMountsPath.move }}
+      restartPolicy: {{ .Values.image.restart }}
+      volumes:
+      - name: {{ .Values.volumeMountsName.data }}
+        emptyDir: {}
+      - name: {{ .Values.volumeMountsName.init }}
+        configMap:
+          name: {{ .Values.volumeMountsName.init }}
+      - name: {{ .Values.volumeMountsName.move }}
+        emptyDir: {}

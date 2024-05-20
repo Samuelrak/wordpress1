@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: word
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      initContainers:
+      - name: restore
+        image: mysql:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+            while true; do
+                if [ "$RESTORE_TRUE" = "true" ]; then
+                    if [ "$MYSQL_DATABASE_RESTORE" = "{{ .Values.envConfig.name.init }}" ]; then
+                        echo "db is restoring..."
+                        cp /restore/init.sql /docker-entrypoint-initdb.d
+                        restore_status=$?
+                        echo $restore_status
+                        echo "restore completed"
+                        break
+                    else
+                        echo "skipping restore"
+                        break
+                    fi
+                fi
+                sleep 5
+            done
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        - name: mysql-move
+          mountPath: /docker-entrypoint-initdb.d
+        - name: mysql-init-script
+          mountPath: /restore
+        env:
+        - name: MYSQL_TABLE_RESTORE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-init-script
+              key: MYSQL_TABLE_RESTORE
+        - name: MYSQL_DATABASE_RESTORE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-init-script
+              key: MYSQL_DATABASE_RESTORE
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_DATABASE
+        - name: RESTORE_TRUE
+          value: "true"
+
+      containers:
+      - name: mysql
+        image: mysql:latest
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_DATABASE
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        - name: mysql-move
+          mountPath: /docker-entrypoint-initdb.d
+
+      restartPolicy: Always
+      volumes:
+      - name: mysql-data
+        emptyDir: {}
+      - name: mysql-init-script
+        configMap:
+          name: mysql-init-script
+      - name: mysql-move
+        emptyDir: {}
+#         mountPath: /etc/mysql/conf.d
+#       - name: mysql-init-script
+#         mountPath: /etc/mysql/init.sql
+#         subPath: init.sql
+#     - name: mysql-config1
+#       configMap:
+#         name: mysql-config1
+#     - name: mysql-init-script
+#       configMap:
+#         name: mysql-init-script
+#        resources:
+#          limits:
+#            cpu: 200m
+#            memory: 400Mi
+#          requests:
+#            cpu: 100m
+#            memory: 370Mi

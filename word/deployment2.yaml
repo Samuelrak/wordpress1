@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: word2-deploy
+  namespace: word
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: word2-deploy
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: word2-deploy
+        version: v2
+#    spec:
+#      affinity:
+#        podAntiAffinity:
+#          requiredDuringSchedulingIgnoredDuringExecution:
+#          - labelSelector:
+#              matchExpressions:
+#              - key: app
+#                operator: In
+#                values:
+#                - word-deploy
+#            topologyKey: kubernetes.io/hostname
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - samuel
+#                - worker01
+#    spec:
+#      affinity:
+#        podAntiAffinity:
+#          requiredDuringSchedulingIgnoredDuringExecution:
+#          - labelSelector:
+#              matchExpressions:
+#              - key: app
+#                operator: In
+#                values:
+#                - word-deploy
+#            topologyKey: kubernetes.io/hostname
+#      nodeSelector:
+#        kubernetes.io/hostname: samuel
+      containers:
+      - image: wordpress:latest
+        name: word-deploy
+        ports:
+        - containerPort: 80
+#        resources:
+#          limits:
+#            cpu: 200m
+#            memory: 512Mi
+#          requests:
+#            cpu: 100m
+#            memory: 256Mi
+        volumeMounts:
+        - mountPath: /var/www/html/wp-config.php
+          name: wp-config-volume
+          subPath: wp-config.php
+        - mountPath: /var/www/html/wp-content/plugins/classic-editor
+          name: plugins-volume
+          readOnly: true
+      volumes:
+      - configMap:
+          name: word-config
+        name: wp-config-volume
+      - emptyDir: {}
+        name: plugins-volume
+      - name: word-secret-volume
+        secret:
+          secretName: word-secret

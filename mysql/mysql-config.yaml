@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: word
+data:
+  MYSQL_USER: wpuser
+  MYSQL_DATABASE: wp
+  MYSQL_PASSWORD: jahoda
+  MYSQL_ROOT_PASSWORD: jahoda
+  MYSQL_TABLE: new_table
+  RESTORE_DATE_DB: "2024-05-15"

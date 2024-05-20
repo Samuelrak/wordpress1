@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: {{ .Values.kind.service }}
+metadata:
+  name: {{ .Values.mysql.service }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: {{ .Values.mysql.deploy }}
+  ports:
+    - protocol: {{ .Values.service.protocol }}
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}

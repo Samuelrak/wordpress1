@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio-deployment
+  namespace: word
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+      - name: minio
+        image: quay.io/minio/minio:latest
+        command:
+        - /bin/bash
+        - -c
+        args:
+        - minio server /myminio/mysql/mysql --console-address :9090
+        volumeMounts:
+        - mountPath: /myminio/mysql/mysql/
+          name: minio-volume
+        - mountPath: /restore
+          name: minio-backup-volume
+        env:
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-secret
+              key: access-key
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-secret
+              key: secret-key
+      volumes:
+      - name: minio-volume
+        hostPath:
+          path: /myminio/mysql/mysql
+          type: DirectoryOrCreate
+      - name: minio-backup-volume
+        emptyDir: {}
+      nodeSelector:
+        kubernetes.io/hostname: samuel

@@ -1,0 +1,9 @@
+FROM mysql:latest
+
+COPY caching_sha2_password.cnf /etc/mysql/conf.d/
+
+COPY entrypoint.sh /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["entrypoint.sh"]

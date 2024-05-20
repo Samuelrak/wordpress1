@@ -1,0 +1,7 @@
+resources:
+#- service2.yaml
+- minio-dev.yaml
+- minio-config.yaml
+- minio-init-script.yaml
+- minio-service.yaml
+- minio-secret.yaml

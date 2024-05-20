@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-mysql
+  namespace: word
+spec:
+  schedule: "12 14  * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mysql-backup-container
+            image: mysql:latest
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                mkdir -p /backup
+                curl -L https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/bin/mc && chmod +x /usr/bin/mc
+                export PATH=$PATH:/usr/bin/mc
+                mkdir -p /var/lib/mysql
+                mysqldump -h mysql-service -u root -p$MYSQL_PASSWORD --all-databases > /var/lib/mysql/mysql_backup_$(date +"%Y-%m-%d").sql
+                mc alias set myminio http://minio-service:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+                mc cp /var/lib/mysql/mysql_backup_$(date +"%Y-%m-%d").sql myminio/mysql/
+            envFrom:
+            - configMapRef:
+                name: mysql-config
+            env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-config
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-config
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-config
+                  key: MYSQL_DATABASE
+          restartPolicy: OnFailure
+          volumes:
+          - name: mysql-persistent-storage
+            persistentVolumeClaim:
+              claimName: mysql-pvc
+          - name: backup-volume
+            emptyDir: {}
+          - name: mysql-data
+            persistentVolumeClaim:
+              claimName: mysql-pvc

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: {{ .Values.kind.config }}
+metadata:
+  name: {{ .Values.mysql.config }}
+data:
+  MYSQL_USER: {{ .Values.configData.name }}
+  MYSQL_DATABASE: {{ .Values.configData.database }}
+  MYSQL_PASSWORD: {{ .Values.configData.password }}
+  MYSQL_ROOT_PASSWORD: {{ .Values.configData.rootPassword }}
+  RESTORE_DATE_DB: {{ .Values.configData.restoreDate }}

@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: word-min-deploy-pdb
+  namespace: word
+spec:
+  minAvailable: 3
+  selector:
+    matchLabels:
+      app: word-deploy
+      version: v1
+
