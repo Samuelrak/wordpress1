@@ -24,14 +24,14 @@ pvc:
   size: 1Gi
 
 configMap:
-  WORDPRESS_DEBUG: "true"
-  WORDPRESS_DB_HOST: mysql-service
-  WORDPRESS_DB_USER: wpuser
-  RESTORE_DATE: "2024-05-13"
+ debug: "true"
+ dbHost: mysql-service
+ dbUser: wpuser
+ restoreDate: "2024-05-13"
 
 secret:
-  WORDPRESS_DB_PASSWORD: amFob2Rh
-  WORDPRESS_DB_NAME: d3A=
+  dbPass: amFob2Rh
+  dbName: d3A=
 
 wordpress:
   deploy: word-deploy
@@ -39,6 +39,7 @@ wordpress:
   secret: word-secret
   config: word-config
   pvc: word-pvc
+  config1: word-config1
 
 resources:
   requests:
@@ -58,6 +59,7 @@ autoscaling:
 volumeMountsName:
   wordfiles: wordpress-files
   wordconfig: wp-config-volume
+  wordconfig1: wp-config-volume1
 
 volumeMountsPath:
   wordfiles: /var/www/html
@@ -103,6 +105,7 @@ volumes:
     secret: word-secret-volume
     files: wordpress-files
     apache: apache-logs
+    config1: wp-config-volume1
   claimName:
     files: wordpress-pvc
 

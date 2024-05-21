@@ -21,10 +21,10 @@ spec:
           ports:
             - containerPort: {{ .Values.service.port }}
           volumeMounts:
-            - name: {{ .Values.volumeMountsName.wordfiles }}
-              mountPath: {{ .Values.volumeMountsPath.wordfiles }}
-            - name: {{ .Values.volumeMountsName.wordconfig }}
-              mountPath: {{ .Values.volumeMountsPath.wordconfig }}
+#            - name: {{ .Values.volumeMountsName.wordfiles }}
+#             mountPath: {{ .Values.volumeMountsPath.wordfiles }}
+#           - name: {{ .Values.volumeMountsName.wordconfig }}
+#             mountPath: {{ .Values.volumeMountsPath.wordconfig }}
 #             subPath: {{ .Values.volumeMountsSubPath.wordconfig }}
           env:
 #           - name: {{ .Values.envName.minio.access }}
@@ -32,16 +32,16 @@ spec:
 #               secretKeyRef:
 #                 name: {{ .Values.envSecretKeyRef.name.minio }}
 #                 key: {{ .Values.envSecretKeyRef.key.access }}
-#           - name: {{ .Values.envName.minio.secret }}
+#          - name: {{ .Values.envName.minio.secret }}
+#            valueFrom:
+#              secretKeyRef:
+#                name: {{ .Values.envSecretKeyRef.name.minio }}
+#                key: {{ .Values.envSecretKeyRef.key.secret }}
+#           - name: {{ .Values.envName.word.restore }}
 #             valueFrom:
-#               secretKeyRef:
-#                 name: {{ .Values.envSecretKeyRef.name.minio }}
-#                 key: {{ .Values.envSecretKeyRef.key.secret }}
-            - name: {{ .Values.envName.word.restore }}
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Values.wordpress.config }}
-                  key: {{ .Values.envName.word.restore }}
+#               configMapKeyRef:
+#                 name: {{ .Values.wordpress.config }}
+#                 key: {{ .Values.envName.word.restore }}
       volumes:
         - name: {{ .Values.volumes.name.config }}
           configMap:
@@ -56,4 +56,8 @@ spec:
             claimName: {{ .Values.volumes.claimName.files }}
         - name: {{ .Values.volumes.name.apache }}
           emptyDir: {}
+#       - name: {{ .Values.volumes.name.config1 }}
+#         configMap:
+#           name: {{ .Values.wordpress.config1 }}
+
 
