@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: {{ .Values.kind.service }}
 metadata:
-  name: {{ .Values.wordpress.deploy }}
+  name: {{ .Values.wordpress.service }}
 spec:
   ports:
     - port: {{ .Values.service.port }}

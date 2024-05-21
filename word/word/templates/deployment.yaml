@@ -13,7 +13,26 @@ spec:
     metadata:
       labels:
         app: {{ include "word.fullname" . }}
+      annotations:
+        "helm.sh/hook": "post-install,post-upgrade"
+        "helm.sh/hook-weight": "0"
+        "helm.sh/hook-delete-policy": "hook-succeeded"
     spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.31
+          command: ['sh', '-c', 'until nc -z -v -w30 {{ .Release.Name }}-mysql 3306; do echo "Waiting for MySQL..."; sleep 5; done']
+        - name: wait-for-redis
+          image: busybox:1.31
+          command: ['sh', '-c', 'until nc -z -v -w30 {{ .Release.Name }}-redis-master 6379; do echo "Waiting for Redis..."; sleep 5; done']
+        - name: install-plugins
+          image: busybox:1.31
+          command: ['sh', '-c', 'for plugin in {{- range .Values.wordpress.plugins }}{{ .url }} {{- end }}; do echo "Installing plugin $plugin..."; wget $plugin -P /tmp/plugins/; unzip /tmp/plugins/$(basename $plugin) -d /var/www/html/wp-content/plugins/; done']
+          volumeMounts:
+            - name: wp-plugins
+              mountPath: /var/www/html/wp-content/plugins
+            - name: wp-plugins-tmp
+              mountPath: /tmp/plugins
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -22,26 +41,26 @@ spec:
             - containerPort: {{ .Values.service.port }}
           volumeMounts:
 #            - name: {{ .Values.volumeMountsName.wordfiles }}
-#             mountPath: {{ .Values.volumeMountsPath.wordfiles }}
-#           - name: {{ .Values.volumeMountsName.wordconfig }}
-#             mountPath: {{ .Values.volumeMountsPath.wordconfig }}
-#             subPath: {{ .Values.volumeMountsSubPath.wordconfig }}
+#              mountPath: {{ .Values.volumeMountsPath.wordfiles }}
+#            - name: {{ .Values.volumeMountsName.wordconfig }}
+#              mountPath: {{ .Values.volumeMountsPath.wordconfig }}
+#              subPath: {{ .Values.volumeMountsSubPath.wordconfig }}
           env:
-#           - name: {{ .Values.envName.minio.access }}
-#             valueFrom:
-#               secretKeyRef:
-#                 name: {{ .Values.envSecretKeyRef.name.minio }}
-#                 key: {{ .Values.envSecretKeyRef.key.access }}
-#          - name: {{ .Values.envName.minio.secret }}
-#            valueFrom:
-#              secretKeyRef:
-#                name: {{ .Values.envSecretKeyRef.name.minio }}
-#                key: {{ .Values.envSecretKeyRef.key.secret }}
-#           - name: {{ .Values.envName.word.restore }}
-#             valueFrom:
-#               configMapKeyRef:
-#                 name: {{ .Values.wordpress.config }}
-#                 key: {{ .Values.envName.word.restore }}
+#            - name: {{ .Values.envName.minio.access }}
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ .Values.envSecretKeyRef.name.minio }}
+#                  key: {{ .Values.envSecretKeyRef.key.access }}
+#            - name: {{ .Values.envName.minio.secret }}
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ .Values.envSecretKeyRef.name.minio }}
+#                  key: {{ .Values.envSecretKeyRef.key.secret }}
+#            - name: {{ .Values.envName.word.restore }}
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: {{ .Values.wordpress.config }}
+#                  key: {{ .Values.envName.word.restore }}
       volumes:
         - name: {{ .Values.volumes.name.config }}
           configMap:
@@ -56,8 +75,10 @@ spec:
             claimName: {{ .Values.volumes.claimName.files }}
         - name: {{ .Values.volumes.name.apache }}
           emptyDir: {}
+        - name: wp-plugins
+          emptyDir: {}
+        - name: wp-plugins-tmp
+          emptyDir: {}
 #       - name: {{ .Values.volumes.name.config1 }}
 #         configMap:
 #           name: {{ .Values.wordpress.config1 }}
-
-

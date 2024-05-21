@@ -119,4 +119,8 @@ secretMapValues:
   WORDPRESS_DB_PASSWORD: amFob2Rh
   WORDPRESS_DB_NAME: d3A=
 
-
+plugins:
+  - name: akismet
+    url: https://downloads.wordpress.org/plugin/akismet.4.1.9.zip
+  - name: hello-dolly
+    url: https://downloads.wordpress.org/plugin/hello-dolly.1.7.2.zip
