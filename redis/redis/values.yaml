@@ -10,6 +10,8 @@ redis:
   image: redis
   version: latest
   port: 6379
+  service: redis-service
+  deploy: redis-deploy
 
 serviceAccount:
   create: true
@@ -40,6 +42,7 @@ service:
   port: 6379
   type: ClusterIP
   protocol: TCP
+
 autoscaling:
   enabled: false
   minReplicas: 1
