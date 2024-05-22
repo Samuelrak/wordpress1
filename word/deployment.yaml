@@ -4,7 +4,7 @@ metadata:
   name: word-deploy
   namespace: word
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: word-deploy
@@ -15,15 +15,15 @@ spec:
         app: word-deploy
         version: v1
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - worker01
+#     affinity:
+#       nodeAffinity:
+#         requiredDuringSchedulingIgnoredDuringExecution:
+#           nodeSelectorTerms:
+#           - matchExpressions:
+#             - key: kubernetes.io/hostname
+#               operator: In
+#               values:
+#               - worker01
       containers:
       - image: wordpress:latest
         name: word-deploy

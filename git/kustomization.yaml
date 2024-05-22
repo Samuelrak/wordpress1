@@ -1,0 +1,4 @@
+resources:
+ - gitlab-runner-role.yaml
+ - gitlab-runner-rolebinding.yaml
+

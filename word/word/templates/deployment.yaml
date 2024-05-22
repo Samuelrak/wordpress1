@@ -29,10 +29,10 @@ spec:
           image: busybox:1.31
           command: ['sh', '-c', 'for plugin in {{- range .Values.wordpress.plugins }}{{ .url }} {{- end }}; do echo "Installing plugin $plugin..."; wget $plugin -P /tmp/plugins/; unzip /tmp/plugins/$(basename $plugin) -d /var/www/html/wp-content/plugins/; done']
           volumeMounts:
-            - name: wp-plugins
-              mountPath: /var/www/html/wp-content/plugins
-            - name: wp-plugins-tmp
-              mountPath: /tmp/plugins
+             - name: wp-plugins
+               mountPath: /var/www/html/wp-content/plugins
+             - name: wp-plugins-tmp
+               mountPath: /tmp/plugins
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

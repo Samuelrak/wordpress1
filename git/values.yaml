@@ -1,0 +1,30 @@
+gitlabUrl: https://gitlab.kosickaakademia.sk/
+runnerRegistrationToken: "GR1348941RHGKpCQ9KZR8yeTnExcY"
+rbac:
+  create: true
+  serviceAccountName: "git"
+runners:
+  config: |
+    concurrent = 10
+    check_interval = 30
+    log_level = "info"
+    connection_max_age = "15m0s"
+    shutdown_timeout = 0
+
+    [session_server]
+      session_timeout = 1800
+
+    [[runners]]
+      name = "gitlab-runner"
+      url = "https://gitlab.kosickaakademia.sk/"
+      token = "GR1348941RHGKpCQ9KZR8yeTnExcY"
+      executor = "kubernetes"
+      [runners.kubernetes]
+        image = "alpine"
+        namespace = "git"
+        privileged = true
+        [runners.kubernetes.volumes]
+          [[runners.kubernetes.volumes.host_path]]
+            name = "local-files"
+            mount_path = "/home/samuel/word"
+            host_path = "/home/samuel/word"

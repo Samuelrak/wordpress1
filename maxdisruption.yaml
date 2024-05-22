@@ -4,7 +4,7 @@ metadata:
   name: word-max-deploy-pdb
   namespace: word
 spec:
-  maxUnavailable: 1
+  maxUnavailable: 3
   selector:
     matchLabels:
       app: word-deploy
